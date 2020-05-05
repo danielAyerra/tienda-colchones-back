@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const ProdList = require('./product.list');
+const ProdList = require('../product.list');
 let usingList = [];
 
 /*TODO: This function should be for initializing Mongo DB collection, if not available
@@ -95,5 +95,20 @@ router.get('/:type', function(req, res, next) {
 	res.status(200).json(prodResponse);
 });
 
+router.get('/'), function(req,res,next) {
+	usingList.sort((p1,p2) => {
+		if(p1.sold>p2.sold){
+			return -1;
+		} else if (p1.sold<p2.sold){
+			return 1;
+		} else {
+			return 0;
+		}
+	} );
+	const prodResponse = usingList.slice(0,6);
+	res.status(200).json(prodResponse);
+}
+
 module.exports = { routes:router,
- 				   initFunction: initProductDB }
+ 				   initFunction: initProductDB,
+ 				 }
