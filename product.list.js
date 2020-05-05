@@ -17,7 +17,7 @@ const prodList = [	{
 					{
 					id:'12554324352SOM',
 					type:'BedBase',
-					prize:700,65,
+					prize:700.65,
 					sold:100,
 					img:'someURL/base64IMG',
 					description: 'Un somier ideal'					
@@ -34,7 +34,7 @@ const prodList = [	{
 					id:'125623427SOM',
 					type:'BedBase',
 					prize:45.00,
-					sold:25
+					sold:25,
 					img:'someURL/base64IMG',
 					description: 'El rompe espaldas por excelencia'
 					},
@@ -57,7 +57,7 @@ const prodList = [	{
 					{
 					id:'12554324352COL',
 					type:'Mattress',
-					prize:700,65,
+					prize:700.65,
 					sold:99,
 					img:'someURL/base64IMG',
 					description: 'Un colchón ideal'					
@@ -74,7 +74,7 @@ const prodList = [	{
 					id:'125623427COL',
 					type:'Mattress',
 					prize:45.00,
-					sold:24
+					sold:24,
 					img:'someURL/base64IMG',
 					description: 'El rompe espaldas por excelencia'
 					}];

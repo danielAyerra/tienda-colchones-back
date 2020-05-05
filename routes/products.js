@@ -1,14 +1,6 @@
 var express = require('express');
 var router = express.Router();
-const ProdList = require('../product.list');
 let usingList = [];
-
-/*TODO: This function should be for initializing Mongo DB collection, if not available
-for now, using a demo.*/
-const initProductDB = funtion(){
-	usingList = ProdList.map(x => x);
-	console.info(usingList);
-}
 
 // Delete elements. Deletes the product if exists or returns a 404 status response.
 // TODO: Mongoose API for deleting an object from MongoDB
@@ -109,6 +101,4 @@ router.get('/'), function(req,res,next) {
 	res.status(200).json(prodResponse);
 }
 
-module.exports = { routes:router,
- 				   initFunction: initProductDB,
- 				 }
+module.exports = router
