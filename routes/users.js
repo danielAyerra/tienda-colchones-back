@@ -1,9 +1,18 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+/*TODO: - Authentication system
+ * 	 	- Usage of JWT Token
+ */
+router.post('/login', function(req, res, next) {
+  
 });
 
+router.post('/checkAdmin', function(req, res, next){
+
+});
+
+router.post('/pass', function(req, res, next){
+
+});
 module.exports = router;
