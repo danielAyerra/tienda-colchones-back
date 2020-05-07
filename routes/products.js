@@ -1,5 +1,7 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const mongoose = require('mongoose');
+const ProductModel = require('../models/product.model');
 
 let usingList = require('../product.list');
 
@@ -82,12 +84,29 @@ router.put('/:type/:id', function(req, res, next) {
   	}
 });
 
+// Get an element. Gets the product if it does exist or returns a 403 status response.
+// TODO: Mongoose API for editing an object in MongoDB. Add exceptions.
+// @param productI 		Product information from Angular
+// @param type 			Type (BedBase or Mattress)
+// @param product 		Product for modification at the database
+router.get('/:type/:id', function(req, res, next) {
+  	const type = req.params.type;
+  	const id = req.params.id;
+  	const found = usingList.some( p=> (p.id == id && p.type == type));
+  	if(found==false){
+  		res.status(204).send(`Not found ${type} ${id}`);
+  	} else {
+  		const prod = usingList.find(p=>p.id==id);
+  		res.status(200).json(prod);
+  	}
+});
+
 // Element list. Returns a product list based on its type.
 // TODO: Mongoose API for getting all the objects with the same attribute value.
 // @param type 			Type (BedBase or Mattress)
 router.get('/:type', function(req, res, next) {
 	const prodResponse = usingList.map(p => {
-		if(p.type == req.params.type){
+		if(p && (p.type == req.params.type)){
 			return p;
 		}
 	});
@@ -95,8 +114,9 @@ router.get('/:type', function(req, res, next) {
 	res.status(200).json(prodResponse);
 });
 
-router.get('/'), function(req,res,next) {
-	usingList.sort((p1,p2) => {
+router.get('/dashboard'), async function(req,res,next) {
+	//const bdResp = await ProductModel.find();
+	/*bdResp.sort((p1,p2) => {
 		if(p1.sold>p2.sold){
 			return -1;
 		} else if (p1.sold<p2.sold){
@@ -105,8 +125,24 @@ router.get('/'), function(req,res,next) {
 			return 0;
 		}
 	} );
-	const prodResponse = usingList.slice(0,6);
-	res.status(200).json(prodResponse);
+	if(bdResp.length<5){
+		prodResponse=bdResp.map(p=>{return p;});
+	} else{
+		prodResponse=bdResp.slice(0,5);
+	}*/
+	
+	const prodList = usingList.sort((p1,p2) => {
+		if(p1.sold>p2.sold){
+			return -1;
+		} else if (p1.sold<p2.sold){
+			return 1;
+		} else {
+			return 0;
+		}
+	} );
+
+	const prodResponse = prodList.slice(0,6);
+	res.status(200).json(usingList);
 }
 
 module.exports = router
