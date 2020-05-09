@@ -18,8 +18,15 @@ cookieCheck=function(cookie){
 cookieCheckAdmin=function(cookie){
 	try{
 		const token = jwt.verify(cookie, secretKey);
-		const resp = token.isAdmin;
-		return resp;
+		if(!token.isAdmin){
+			return false;
+		}
+		if(token.isAdmin==true){
+			return true;
+		}
+		else{
+			return false;
+		}
 	} catch(err){
 		return false;
 	}

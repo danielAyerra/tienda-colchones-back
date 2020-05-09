@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const ProductModel = require('../models/product.model');
+const Token = require('../auth/jwt.js');
 
 //dev: Mock data
 let usingList = require('../product.list');
@@ -10,14 +11,20 @@ let usingList = require('../product.list');
 // @param productId 	ID of the product to delete.
 // @oaram type			Type of the deleted element
 router.delete('/:type/:id', async function(req, res, next) {
+	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
 	const type = req.params.type;
 	const id = req.params.id;
-	const result = await ProductModel.deleteOne({id: id, pType: type});
-	if(result.deletedCount==1){
-		res.status(200).send(`${req.params.type} ${req.params.id} removed from our database`);
-	} else {
-		res.status(404).send('This product was not found on our database!');
+	if(isAdmin){
+		const result = await ProductModel.deleteOne({id: id, pType: type});
+		if(result.deletedCount==1){
+			res.status(200).send(`${req.params.type} ${req.params.id} removed from our database`);
+		} else {
+			res.status(404).send('This product was not found on our database!');
+		}
+	} else{
+		res.status(401).send('Unauthorized to delete!');
 	}
+
 
 	/* Mock Data. Deprecated
 	const productId = req.params.id;
@@ -36,26 +43,31 @@ router.delete('/:type/:id', async function(req, res, next) {
 // @param productI 		Product information from Angular
 // @param type 			Type (BedBase or Mattress)
 // @param product 		Product for adding to the database
-router.post('/:type/:id', async function(req, res, next) {
-  	let productI;
-	if(req.body.product){
-		productI = JSON.parse(req.body.product);
-	}
+router.put('/:type/:id', async function(req, res, next) {
+  	let product;
   	const type = req.params.type;
-  	ProductModel.create({
-  		id: productI.id,
-  		prize: productI.prize,
-  		pType: type,
-  		sold: 0,
-  		img: productI.url,
-  		description: productI.description
-  	}).then(
-  		val=>{
-  			res.status(201).send(`Created ${type} ${product.id}`);
-  		}).catch(
-  		err=>{
-  			res.status(403).send(err);
-  		});
+	if(req.body.id&&req.body.prize&&req.body.img&&req.body.description){
+		product={
+			id: req.body.id,
+			pType: type,
+			prize: req.body.prize,
+			img: req.body.img,
+			description: req.body.description,
+			sold: 0
+		};
+	}
+	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
+	if(isAdmin){
+	  	ProductModel.create(product).then(
+	  		(val)=>{
+	  			res.status(201).send(`Created ${type} ${product.id}`);
+	  		}).catch(
+	  		(err)=>{
+	  			res.status(403).json({err: err});
+	  		});
+	} else{
+		res.status(401).send('Unauthorized to create!');
+	}
   	/* Mock data. Deprecated
 
   	const found = usingList.some( p=> p.id == product.id);
@@ -66,7 +78,6 @@ router.post('/:type/:id', async function(req, res, next) {
   	} else {
   		res.status(403).send('Element exist in database');
   	}*/
-
 });
 
 
@@ -77,21 +88,24 @@ router.post('/:type/:id', async function(req, res, next) {
 // @param productI 		Product information from Angular
 // @param type 			Type (BedBase or Mattress)
 // @param product 		Product for modification at the database
-router.put('/:type/:id', async function(req, res, next) {
-	let productI;
-	if(req.body.product){
-		productI = JSON.parse( req.body.product);
+router.post('/:type/:id', async function(req, res, next) {
+	let product;
+	if(req.body.id&&req.body.prize&&req.body.img&&req.body.description){
+		product={
+			id: req.body.id,
+			pType: req.params.type,
+			prize: req.body.prize,
+			img: req.body.img,
+			description: req.body.description
+		};
 	}
-	const type = req.params.type;
-	const product = {
-  		id: productI.id,
-  		prize: productI.prize,
-  		type: type,
-  		sold: 0,
-  		img: productI.url,
-  		description: productI.description
+	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
+	if(isAdmin==true){
+		const result = await ProductModel.updateOne({id: product.id},product);
+		res.status(200).json(result);
+	} else{
+		res.status(401).send('Unauthorized to edit!');
 	}
-	const result = await ProductModel.updateOne({id: product.id},product);
 	/* Deprecated. Mock Data
 	const prodIndex = usingList.findIndex( p=> p.id == product.id);
 
@@ -101,8 +115,7 @@ router.put('/:type/:id', async function(req, res, next) {
   	} else {
   		res.status(403).send('Element does not exist in database');
   	}
-  	*/
-  	res.status(200).json(result);
+  	*/	
 });
 
 // Get an element. Gets the product if it does exist or returns a 403 status response.
@@ -146,8 +159,8 @@ router.get('/:type', async function(req, res, next) {
 });
 
 /*TODO: Organization of response*/
-router.get('/dashboard'), async function(req,res,next) {
-	const bdResp = await ProductModel.find({});
+router.get('/dashboard', async function(req,res,next) {
+	const bdResp = await ProductModel.find();
 	/*bdResp.sort((p1,p2) => {
 		if(p1.sold>p2.sold){
 			return -1;
@@ -157,11 +170,13 @@ router.get('/dashboard'), async function(req,res,next) {
 			return 0;
 		}
 	} );*/
-	if(bdResp.length<5){
+	res.json({message:'recibo bien'});
+	/*if(bdResp.length<5){
 		res.status(200).json(bdResp);
 	} else{
-		res.status(200).json(bdResp.slice(0,6));
-	}
+		const resp=bdResp.slice(0,6)
+		res.status(200).json(resp);
+	}*/
 	/*
 	const prodList = usingList.sort((p1,p2) => {
 		if(p1.sold>p2.sold){
@@ -175,6 +190,6 @@ router.get('/dashboard'), async function(req,res,next) {
 
 	const prodResponse = prodList.slice(0,6);
 	res.status(200).json(usingList);*/
-}
+});
 
 module.exports = router

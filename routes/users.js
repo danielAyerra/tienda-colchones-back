@@ -3,8 +3,7 @@ const router = express.Router();
 const UserModel = require('../models/user.model');
 const Token = require('../auth/jwt.js');
 
-/*TODO: - Authentication system
- * 	 	- Usage of JWT Token
+/*TODO: 
  *		- Password in Mongo should be encrypted!
  */
 router.post('/login', async function(req, res, next) {
@@ -14,28 +13,26 @@ router.post('/login', async function(req, res, next) {
   	user=req.body.user;
   	pass=req.body.pass;
   } else {
-  	return res.status(400).json(userInfo);
+  	return res.status(400).json({message: 'No credentials sent'});
   }
   const dbUser = await UserModel.findOne({email:user, pass:pass});
   if(!dbUser){
   	return res.status(401).json({res:false});
   }
-  const token = Token.cookieSign(user, pass);
+  const token = Token.cookieSign(user, dbUser.isAdmin);
   return res.status(202).cookie('Authorization',token, 
   	{expires: new Date(Date.now() + 18000000)})
   .json({res:true});
 });
 
-router.post('/checkAdmin', function(req, res, next){
-	const token = Token.cookieCheck(req.body.Authorization);
-	if(token.ver==true){
-		const resp = token.resp;
-		return res.status(200).json(resp.isAdmin);
+router.get('/checkAdmin', function(req, res, next) {
+	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
+	if(isAdmin==true) {
+		res.status(200).json({message:true}).send();
 	}
-	else{
-		return res.status(401).json(false);
+	else {
+		res.status(401).json({message:false}).send();
 	}
-
 });
 
 router.post('/pass', function(req, res, next){
