@@ -1,15 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
 const ProductModel = require('../models/product.model');
 const Token = require('../auth/jwt.js');
 
-//dev: Mock data
-let usingList = require('../product.list');
 
-// Delete elements. Deletes the product if exists or returns a 404 status response.
-// @param productId 	ID of the product to delete.
+//dev: Mock data
+//let usingList = require('../product.list');
+
+// Delete elements. 	Deletes the product if exists and the request 
+//						is from an authorized user
+//
+// @param id			ID of the product to delete
 // @oaram type			Type of the deleted element
+// @returns 			401 if not an authorized user
+// @returns 			404 if not found in database
+// @returns 			200 if OK 	
 router.delete('/:type/:id', async function(req, res, next) {
 	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
 	const type = req.params.type;
@@ -38,12 +43,14 @@ router.delete('/:type/:id', async function(req, res, next) {
 	}*/
 });
 
-// Add elements. Adds the product if it does not exist or returns a 403 status response.
-// TODO: Exception Management. Incorrect message is sent back
-// @param productI 		Product information from Angular
+// Add elements. 		Adds the product if it does not exist or manages exceptions.
 // @param type 			Type (BedBase or Mattress)
 // @param product 		Product for adding to the database
-router.put('/:type/:id', async function(req, res, next) {
+// @returns 			204 if not enough parameters are resceived
+// @returns 			500 if failure
+// @returns 			401 if not an authorized user
+// @returns 			201 if OK 		
+router.post('/:type/:id', async function(req, res, next) {
   	let product;
   	const type = req.params.type;
 	if(req.body.id&&req.body.prize&&req.body.img&&req.body.description){
@@ -56,6 +63,9 @@ router.put('/:type/:id', async function(req, res, next) {
 			sold: 0
 		};
 	}
+	else{
+		res.status(204).send('No content received');
+	}
 	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
 	if(isAdmin){
 	  	ProductModel.create(product).then(
@@ -63,7 +73,7 @@ router.put('/:type/:id', async function(req, res, next) {
 	  			res.status(201).send(`Created ${type} ${product.id}`);
 	  		}).catch(
 	  		(err)=>{
-	  			res.status(403).json({err: err});
+	  			res.status(500).json({err: err});
 	  		});
 	} else{
 		res.status(401).send('Unauthorized to create!');
@@ -88,7 +98,7 @@ router.put('/:type/:id', async function(req, res, next) {
 // @param productI 		Product information from Angular
 // @param type 			Type (BedBase or Mattress)
 // @param product 		Product for modification at the database
-router.post('/:type/:id', async function(req, res, next) {
+router.put('/:type/:id', async function(req, res, next) {
 	let product;
 	if(req.body.id&&req.body.prize&&req.body.img&&req.body.description){
 		product={
@@ -118,10 +128,11 @@ router.post('/:type/:id', async function(req, res, next) {
   	*/	
 });
 
-// Get an element. Gets the product if it does exist or returns a 403 status response.
-// @param productI 		Product information from Angular
+// Get an element. 		Gets the product if it does exist or returns
+//						a 204 status response.
+// @param id			Product ID
 // @param type 			Type (BedBase or Mattress)
-// @param product 		Product for modification at the database
+// @returns found 		Product at the database
 router.get('/:type/:id', async function(req, res, next) {
   	const type = req.params.type;
   	const id = req.params.id;
@@ -147,6 +158,7 @@ router.get('/:type/:id', async function(req, res, next) {
 router.get('/:type', async function(req, res, next) {
 	const type = req.params.type;
 	const list = await ProductModel.find({pType: type});
+	console.info('list');
 	res.status(200).json(list);
 	/* Deprecated
 	const prodResponse = usingList.map(p => {
@@ -156,40 +168,6 @@ router.get('/:type', async function(req, res, next) {
 	});
 
 	res.status(200).json(prodResponse).send();*/
-});
-
-/*TODO: Organization of response*/
-router.get('/dashboard', async function(req,res,next) {
-	const bdResp = await ProductModel.find();
-	/*bdResp.sort((p1,p2) => {
-		if(p1.sold>p2.sold){
-			return -1;
-		} else if (p1.sold<p2.sold){
-			return 1;
-		} else {
-			return 0;
-		}
-	} );*/
-	res.json({message:'recibo bien'});
-	/*if(bdResp.length<5){
-		res.status(200).json(bdResp);
-	} else{
-		const resp=bdResp.slice(0,6)
-		res.status(200).json(resp);
-	}*/
-	/*
-	const prodList = usingList.sort((p1,p2) => {
-		if(p1.sold>p2.sold){
-			return -1;
-		} else if (p1.sold<p2.sold){
-			return 1;
-		} else {
-			return 0;
-		}
-	} );
-
-	const prodResponse = prodList.slice(0,6);
-	res.status(200).json(usingList);*/
 });
 
 module.exports = router

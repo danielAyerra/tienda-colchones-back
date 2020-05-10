@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const UserModel = require('../models/user.model');
 const Token = require('../auth/jwt.js');
+const mongoose = require('mongoose')
 
 /*TODO: 
  *		- Password in Mongo should be encrypted!
@@ -35,7 +36,4 @@ router.get('/checkAdmin', function(req, res, next) {
 	}
 });
 
-router.post('/pass', function(req, res, next){
-
-});
 module.exports = router;
