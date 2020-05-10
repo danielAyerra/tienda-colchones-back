@@ -29,10 +29,10 @@ router.post('/login', async function(req, res, next) {
 router.get('/checkAdmin', function(req, res, next) {
 	const isAdmin = Token.cookieCheckAdmin(req.cookies.Authorization);
 	if(isAdmin==true) {
-		res.status(200).json({message:true}).send();
+		res.status(200).json({message:true});
 	}
 	else {
-		res.status(401).json({message:false}).send();
+		res.status(401).json({message:false});
 	}
 });
 

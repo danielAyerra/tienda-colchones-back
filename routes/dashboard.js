@@ -26,7 +26,7 @@ router.get('/dashboard', async function(req, res, next) {
 		}
 		return compare;
 	});
-	res.status(200).json(sortList.slice(0,6));
+	res.status(200).json(sortList.slice(0,5));
 });
 
 module.exports = router
